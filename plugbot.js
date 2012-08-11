@@ -52,10 +52,23 @@ var hideVideo = false;
 var userList = true;
 
 /**
- * Whenever a user chooses to apply custom username FX to a
- * user, their username and chosen colour and saved here. 
+ * Auto colors based on nick
  */
-var customUsernames = new Array();
+var autoColors = true;
+var colors = ["#6084d0", "#eeb647", "#6c6b5f", "#d6484f", 
+    "#ce9ed1", "#ff9f3b", "#93b7ff", "#e0ddd0", 
+    "#94ecba", "#309687"];
+/**
+ * Hash nick to a colour
+ */
+var hashString = function (s) {
+    var res = 0;
+    s = s.toLowerCase();
+    for (var i = 0; i < s.length; ++i) {
+        res += s.charCodeAt(i);
+    }
+    return colors[res % colors.length];
+}
 
 // TODO:  DJ battle-related.
 var points = 0;
@@ -98,27 +111,20 @@ function initAPIListeners()
 			populateUserlist();
 	});
 	
-	API.addEventListener(API.CHAT, checkCustomUsernames);
+	API.addEventListener(API.CHAT, updateColors);
 }
 
 
 /**
- * Periodically check the chat history to see if any of the messages
- * match that of the user's chosen custom username FX.  If so, then we
- * need to stylise every instance of those. 
+ * Periodically check the chat history to update nicks to random colour
  */
-function checkCustomUsernames() 
+function updateColors() 
 {
 	$('span[class*="chat-from"]').each(function() {
-		for (var custom in customUsernames) 
-		{
-			var check = customUsernames[custom].split(":");
-			if (check[0] == $(this).text()) 
-			{
-				$(this).css({ color: "#" + check[1]});
-				break;
-			}
-		}
+        if (autoColors) {
+            var user = $(this).text();
+            $(this).css({color: hashString(user)});
+        }
 	});
 }
 
@@ -130,10 +136,6 @@ function checkCustomUsernames()
 function displayUI()
 {
 	$("#plugbot-warning").remove();
-	$('#playback').append('<div id="plugbot-warning" style="background-color:#0a0a0a;opacity:0.91;width:100%;padding:12px 0 12px 0;color:#fff;text-align:center;opacity:0;font-variant:small-caps;font-size:15px">'
-		+ 'it is recommended that you extend the chatbox while using plug.bot <br />so you have as much storage for ' 
-		+ 'custom usernames as possible.  <br />however, it is not necessary.</div>');
-	
 	/*
 	 * Be sure to remove any old instance of the UI, in case the user
 	 * reloads the script without refreshing the page (updating.)
@@ -149,33 +151,9 @@ function displayUI()
 		+ 	'<p id="plugbot-btn-queue" style="color:#ED1C24">auto-queue</p>'
 		+ 	'<p id="plugbot-btn-hidevideo" style="color:#ED1C24">hide video</p>'
 		+ 	'<p id="plugbot-btn-userlist" style="color:#3FFF00">userlist</p>'
-		+ 	'<h2 title="This makes it so you can give a user in the room a special colour when they chat!">Custom Username FX: <br /><br id="space" /><span onclick="promptCustomUsername()" style="cursor:pointer">+ add new</span></h2>'
+		+ 	'<p id="plugbot-btn-colors" style="color:#3FFF00">colors</p>'
 	);
 }
-
-
-/**
- * Prompt the user to provide a new custom username FX. 
- */
-function promptCustomUsername() {
-	var check = prompt("Format:  username:color\n(For color codes, Google 'Hexadecimal color chart')");
-	
-	customUsernames.push(check);
-	
-	$('#space').after('<span id="' + check + '" onclick="removeCustomUsername(\'' + check + '\');$(this).next().remove();$(this).remove();" style="cursor:pointer;color:#' + check.split(":")[1] + '">- ' + check.split(":")[0] 
-		+ '</span><br />');
-		
-	checkCustomUsernames();
-}
-
-
-/**
- * Remove an existing entry in the custom username FX. 
- */
-function removeCustomUsername(data) {
-	delete customUsernames[data];
-}
-
 
 /**
  * For every button on the Plug.bot UI, we have listeners backing them
@@ -185,15 +163,9 @@ function removeCustomUsername(data) {
  */
 function initUIListeners()
 {	
-	$("#plugbot-btn-userlist").on("click", function() {
-		userList = !userList;
-		$(this).css("color", userList ? "#3FFF00" : "#ED1C24");
-		$("#plugbot-userlist").css("visibility", userList ? ("visible") : ("hidden"));
-		if (!userList) {
-			$("#plugbot-userlist").empty();
-		} else {
-			populateUserlist();
-		}
+	$("#plugbot-btn-colors").on("click", function() {
+        autoColors = !autoColors;
+		$(this).css("color", autoColors ? "#3FFF00" : "#ED1C24");
 	});
 
 	$("#plugbot-btn-woot").on("click", function() {
@@ -454,12 +426,3 @@ initAPIListeners();
 populateUserlist();
 displayUI();
 initUIListeners();
-
-/*
- * Display a warning telling users that it's preferable to extend
- * the chatbox while using Plug.bot for the most space for custom
- * usernames.
- */
-$(function() {
-	$("#plugbot-warning").animate({"opacity": "0.91"}, {duration: "medium"}).delay(8000).animate({"opacity": "0"}, {duration: "slow"});
-});

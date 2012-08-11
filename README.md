@@ -11,7 +11,7 @@ A collection of extensions to the growing online DJing website, <a href="plug.dj
 + User list  :  A dynamic list of every user in the room, colour-coded based on their current vote.  Green = Woot, Red = Meh, White = No vote  Special usergroups are denoted by the icon you'd normally see in the chat
 + Button UI  :  Allows you to easily configure your Plug.bot experience;  enable or disable each of its features at the click of a button.  Red = Off, Green = On
 + Hide video  :  Allows you to hide videos from your view
-+ Custom username FX *NEW*  :  Now allows you to change some user's names in the chatbox to a different colour
++ Random nick colors: Randomly colors nicks in chat
 + Open-source code  :  All Plug.bot code is available in this repo, no cost, no secrecy
 
 
@@ -22,7 +22,7 @@ If you get stuck or just can't be bothered to use your brain (I know that feel),
 
 <b>Create a new bookmark in your favourite browser and copy/paste this to the 'URL/Location' of the bookmark (<i>or even better just select all the text and drag it there</i>)</b>
 
-	javascript: (function () { var jsCode = document.createElement('script'); jsCode.setAttribute('id', 'plugbot-js'); jsCode.setAttribute('src', 'https://raw.github.com/connergdavis/Plugbot/master/plugbot.js'); document.body.appendChild(jsCode); }());
+	javascript: (function () { var jsCode = document.createElement('script'); jsCode.setAttribute('id', 'plugbot-js'); jsCode.setAttribute('src', 'https://raw.github.com/gaganpreet/Plugbot/master/plugbot.js'); document.body.appendChild(jsCode); }());
 
 Alternatively, you can go<a href="http://pastebin.com/x8Xak4zU"> to this site </a>and copy the code you see into a new bookmark.  Just Copy and Paste the code into the URL/Location of your bookmark.
 
