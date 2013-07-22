@@ -23,7 +23,7 @@ Skip Video | This is exactly like hide video, except it additionally mutes the a
 
 Drag the text from the link below (it will look like code) into your Bookmarks Bar and it should make a new bookmark.  You can label it yourself, it doesn't matter.  Then just click the bookmark whenever you're on Plug.dj and you're good to go.
 
-Install [this bookmarklet](http://pastebin.com/raw.php?i=ywuQK2XA) in order to run Plug.bot.  If you have a problem with installing the bookmarklet, just Google it, there are plenty of solutions to be found.  DO NOT e-mail me about it.  The ONLY time the bookmark will ever not work is if Github is down, and that's pretty rare so don't be worried (it happened for less than 24 hours last year and then it was back to normal.)
+Install [this bookmarklet](http://pastebin.com/raw.php?i=uF7dAUfM) in order to run Plug.bot.  If you have a problem with installing the bookmarklet, just Google it, there are plenty of solutions to be found.  DO NOT e-mail me about it.  The ONLY time the bookmark will ever not work is if Github is down, and that's pretty rare so don't be worried (it happened for less than 24 hours last year and then it was back to normal.)
 
 #### YouTube Video Install Guides ####
 
