@@ -610,7 +610,7 @@ function drawUserlistItem(imagePath, color, username)
 
 function updateChatColors() 
 {
-    ($('span[class*="chat-from"]').get().reverse()).each(function() 
+    $($('span[class*="chat-from"]').get().reverse()).each(function() 
     {
         if (randomColors) 
         {
