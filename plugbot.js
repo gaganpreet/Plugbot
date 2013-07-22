@@ -56,6 +56,10 @@ var userList;
  * Whether the current video was skipped or not.
  */
 var skippingVideo = false;
+/*
+ * Whether the user has enabled random colors, a la IRC style
+ */
+var randomColors = false;
 
 /*
  * Cookie constants
@@ -64,6 +68,15 @@ var COOKIE_WOOT = 'autowoot';
 var COOKIE_QUEUE = 'autoqueue';
 var COOKIE_HIDE_VIDEO = 'hidevideo';
 var COOKIE_USERLIST = 'userlist';
+var COOKIE_RANDOM_COLORS = 'randomColors';
+
+
+/*
+ * List of colours to pick from for random nick colors
+ */
+var colors = ["#6084d0", "#eeb647", "#6c6b5f", "#d6484f", 
+    "#ce9ed1", "#ff9f3b", "#93b7ff", "#e0ddd0", 
+    "#94ecba", "#309687"];
 
 /*
  * Maximum amount of people that can be in the waitlist.
@@ -91,6 +104,11 @@ function initAPIListeners()
      * This listens for changes in the dj booth
      */
     API.on(API.DJ_UPDATE, queueUpdate);
+
+    /*
+     * This updates the colours in chat and userlist
+     */
+    API.on(API.CHAT, updateChatColors);
 
     /*
      * This listens for whenever a user in the room either WOOT!s
@@ -149,9 +167,10 @@ function displayUI()
     var cQueue = autoqueue ? '#3FFF00' : '#ED1C24';
     var cHideVideo = hideVideo ? '#3FFF00' : '#ED1C24';
     var cUserList = userList ? '#3FFF00' : '#ED1C24';
+    var cRandomColors = randomColors ? '#3FFF00' : '#ED1C24';
 	
     $('#plugbot-ui').append(
-        '<p id="plugbot-btn-woot" style="color:' + cWoot + '">auto-woot</p><p id="plugbot-btn-queue" style="color:' + cQueue + '">auto-queue</p><p id="plugbot-btn-hidevideo" style="color:' + cHideVideo + '">hide video</p><p id="plugbot-btn-skipvideo" style="color:#ED1C24">skip video</p><p id="plugbot-btn-userlist" style="color:' + cUserList + '">userlist</p>');
+        '<p id="plugbot-btn-woot" style="color:' + cWoot + '">auto-woot</p><p id="plugbot-btn-queue" style="color:' + cQueue + '">auto-queue</p><p id="plugbot-btn-hidevideo" style="color:' + cHideVideo + '">hide video</p><p id="plugbot-btn-skipvideo" style="color:#ED1C24">skip video</p><p id="plugbot-btn-userlist" style="color:' + cUserList + '">userlist</p><p id="plugbot-btn-randomColors" style="color:' + cRandomColors + '">random colors</p>');
 }
 
 /**
@@ -256,6 +275,17 @@ function initUIListeners()
         }
         jaaulde.utils.cookies.set(COOKIE_QUEUE, autoqueue);
     });
+
+    /*
+     * Toggle randomColors
+     */
+    $('#plugbot-btn-randomColors').on('click', function() 
+	{
+        randomColors = !randomColors;
+        $(this).css('color', randomColors ? '#3FFF00' : '#ED1C24');
+		
+        jaaulde.utils.cookies.set(COOKIE_RANDOM_COLORS, randomColors);
+    });
 }
 
 /**
@@ -321,7 +351,7 @@ function queueUpdate()
  */
 function isInQueue() 
 {
-    var self = API.getSelf();
+    var self = API.getUser();
     return API.getWaitList().indexOf(self) !== -1 || API.getDJs().indexOf(self) !== -1;
 }
 
@@ -337,7 +367,7 @@ function joinQueue()
     } 
 	else if (API.getWaitList().length < MAX_USERS_WAITLIST) 
 	{
-        API.waitListJoin();
+        API.djJoin();
     }
 }
 
@@ -370,7 +400,7 @@ function populateUserlist()
      */
     if ($('#button-dj-waitlist-view').attr('title') !== '') 
 	{
-        if ($('#button-dj-waitlist-leave').css('display') === 'block' && ($.inArray(API.getDJs(), API.getSelf()) == -1)) {
+        if ($('#button-dj-waitlist-leave').css('display') === 'block' && ($.inArray(API.getDJs(), API.getUser()) == -1)) {
             var spot = $('#button-dj-waitlist-view').attr('title').split('(')[1];
             spot = spot.substring(0, spot.indexOf(')'));
             $('#plugbot-userlist').append('<h1 id="plugbot-queuespot"><span style="font-variant:small-caps">Waitlist:</span> ' + spot + '</h3><br />');
@@ -488,7 +518,7 @@ function appendUser(user)
         /*
          * If they're a normal user, they have no special icon.
          */
-        drawUserlistItem('void', colorByVote(user.vote), username);
+        drawUserlistItem('void', colorByNick(username), username);
     } 
 	else 
 	{
@@ -496,33 +526,27 @@ function appendUser(user)
          * Otherwise, they're ranked and they aren't playing,
          * so draw the image next to them.
          */
-        drawUserlistItem(imagePrefix + imagePrefixByVote(user.vote), colorByVote(user.vote), username);
+        drawUserlistItem(imagePrefix + imagePrefixByVote(user.vote), colorByNick(username), username);
     }
 }
 
-/**
- * Determine the color of a person's username in the
- * userlist based on their current vote.
+/*
+ * Hash a nick to a colour
+ * Result is based on sum of ascii characters % length of the colors array
  *
- * @param vote
- * 				Their vote: woot, undecided or meh.
+ * @param s
+ *
+ * @returns hex colour value from array colors
  */
-function colorByVote(vote) 
-{
-    if (!vote) 
-	{
-        return '#fff'; // blame Boycey
+var colorByNick = function (s) {
+    var res = 0;
+    s = s.toLowerCase();
+    for (var i = 0; i < s.length; ++i) {
+        res += s.charCodeAt(i);
     }
-    switch (vote) 
-	{
-        case -1:	// Meh
-            return '#c8303d';
-        case 0:	// Undecided
-            return '#fff';
-        case 1:	// Woot
-            return '#c2e320';
-    }
-}
+    return colors[res % colors.length];
+} 
+
 
 /**
  * Determine the "image prefix", or a picture that
@@ -584,6 +608,17 @@ function drawUserlistItem(imagePath, color, username)
         '<p style="cursor:pointer;' + (imagePath === 'void' ? '' : 'text-indent:6px !important;') + 'color:' + color + ';' + ((API.getDJs()[0].username == username) ? 'font-size:15px;font-weight:bold;' : '') + '" onclick="$(\'#chat-input-field\').val($(\'#chat-input-field\').val() + \'@' + username + ' \').focus();">' + username + '</p>');
 }
 
+function updateChatColors() 
+{
+    ($('span[class*="chat-from"]').get().reverse()).each(function() 
+    {
+        if (randomColors) 
+        {
+            var user = $(this).text();
+            $(this).css({color: colorByNick(user)});
+        }
+    });
+}
 
 ///////////////////////////////////////////////////////////
 ////////// EVERYTHING FROM HERE ON OUT IS INIT ////////////
@@ -656,6 +691,12 @@ function readCookies()
      */
     value = jaaulde.utils.cookies.get(COOKIE_USERLIST);
     userList = value != null ? value : true;
+
+    /*
+     * Read random colors cookie (true by default)
+     */
+    value = jaaulde.utils.cookies.get(COOKIE_RANDOM_COLORS);
+    randomColors = value != null ? value : true;
 
     onCookiesLoaded();
 }
